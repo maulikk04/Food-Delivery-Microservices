@@ -1,15 +1,18 @@
 package com.fooddelivery.restaurant_service.service;
 
+import com.fooddelivery.common.exception.ResourceNotFoundException;
 import com.fooddelivery.restaurant_service.dto.RestaurantRequest;
 import com.fooddelivery.restaurant_service.dto.RestaurantResponse;
 import com.fooddelivery.restaurant_service.model.Restaurant;
 import com.fooddelivery.restaurant_service.repository.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RestaurantService {
@@ -23,6 +26,7 @@ public class RestaurantService {
                 .foodItems(request.getFoodItems())
                 .build();
         Restaurant savedRestaurant = restaurantRepository.save(restaurant);
+        log.info("Restaurant saved id={}", savedRestaurant.getId());
         return mapToResponse(savedRestaurant);
     }
 
@@ -32,7 +36,11 @@ public class RestaurantService {
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
-
+    public RestaurantResponse getRestaurantById(String id) {
+        Restaurant restaurant = restaurantRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + id));
+        return mapToResponse(restaurant);
+    }
     private RestaurantResponse mapToResponse(Restaurant restaurant) {
         return RestaurantResponse.builder()
                 .id(restaurant.getId())
