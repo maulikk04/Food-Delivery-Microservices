@@ -6,23 +6,6 @@ spring:
     name: api-gateway
   config:
     import: "optional:configserver:http://localhost:8888"
-  cloud:
-    gateway:
-      server:
-        webflux: # This is the new parent key required by latest Spring Cloud
-          discovery:
-            locator:
-              enabled: false
-          routes:
-            - id: user-service
-              uri: lb://user-service
-              predicates:
-                - Path=/api/users/**
-
-            - id: restaurant-service
-              uri: lb://restaurant-service
-              predicates:
-                  - Path=/api/restaurants/**
 
 eureka:
   client:

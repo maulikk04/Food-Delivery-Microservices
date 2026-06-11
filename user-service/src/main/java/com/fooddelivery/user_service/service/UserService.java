@@ -1,5 +1,7 @@
 package com.fooddelivery.user_service.service;
 
+import com.fooddelivery.common.exception.ResourceNotFoundException;
+import com.fooddelivery.common.exception.UnauthorizedException;
 import com.fooddelivery.user_service.dto.LoginRequest;
 import com.fooddelivery.user_service.dto.UserRequest;
 import com.fooddelivery.user_service.dto.UserResponse;
@@ -7,9 +9,11 @@ import com.fooddelivery.user_service.model.User;
 import com.fooddelivery.user_service.repository.UserRepository;
 import com.fooddelivery.user_service.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -24,17 +28,22 @@ public class UserService {
                 .role(userRequest.getRole() != null ? userRequest.getRole() : "ROLE_USER")
                 .build();
         User savedUser = userRepository.save(user);
+        log.info("User registered id={}", savedUser.getId());
         return mapToUserResponse(savedUser);
     }
     public String login(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
 
         if (passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            return jwtUtil.generateToken(user.getEmail());
-        } else {
-            throw new RuntimeException("Invalid Credentials");
+            return jwtUtil.generateToken(user.getId(),user.getEmail(),user.getRole());
         }
+        throw new UnauthorizedException("Invalid credentials");
+    }
+    public UserResponse getUserById(String id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        return mapToUserResponse(user);
     }
     private UserResponse mapToUserResponse(User user){
         return UserResponse.builder()
