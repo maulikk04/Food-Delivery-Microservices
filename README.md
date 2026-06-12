@@ -295,6 +295,14 @@ spring:
 
 This keeps sensitive database credentials out of source control.
 
+### Build Project
+
+Before starting the services, build the entire project so that the shared `error-handling` module is available to dependent services.
+
+```bash
+mvn clean install
+```
+
 ### Start Services
 
 Run the services in the following order:
